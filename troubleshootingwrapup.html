@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canal+ "App Users" Analysis - Why (none) Values Appear</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        
+        .header .subtitle {
+            color: #718096;
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+        
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .alert h3 {
+            color: #856404;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .alert p {
+            color: #856404;
+            font-size: 16px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .example-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .example-card.broken {
+            border: 3px solid #e53e3e;
+        }
+        
+        .example-card.working {
+            border: 3px solid #38a169;
+        }
+        
+        .example-header {
+            padding: 24px;
+            color: white;
+        }
+        
+        .example-card.broken .example-header {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+        
+        .example-card.working .example-header {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        }
+        
+        .example-header h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .example-header .meta {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .example-body {
+            padding: 24px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-row .label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .info-row .value {
+            color: #2d3748;
+            text-align: right;
+        }
+        
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            line-height: 1.8;
+        }
+        
+        .code-block .key {
+            color: #81e6d9;
+        }
+        
+        .code-block .string {
+            color: #f6ad55;
+        }
+        
+        .code-block .notice {
+            color: #fc8181;
+            font-weight: bold;
+            background: rgba(252, 129, 129, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .code-block .success {
+            color: #68d391;
+            font-weight: bold;
+            background: rgba(104, 211, 145, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .comparison {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .comparison h2 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        
+        .comparison-item h3 {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .comparison-item.broken h3 {
+            color: #e53e3e;
+        }
+        
+        .comparison-item.working h3 {
+            color: #38a169;
+        }
+        
+        .solution {
+            background: #e6fffa;
+            border-radius: 16px;
+            padding: 40px;
+            margin-top: 30px;
+            border: 2px solid #38a169;
+        }
+        
+        .solution h2 {
+            color: #2f855a;
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
+        
+        .solution-steps {
+            display: grid;
+            gap: 20px;
+            margin-top: 24px;
+        }
+        
+        .solution-step {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid #38a169;
+        }
+        
+        .solution-step h3 {
+            color: #2d3748;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .solution-step p {
+            color: #4a5568;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge.priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .badge.priority-medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+        
+        .badge.quick-win {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+        
+        @media (max-width: 768px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔍 Canal+ "App Users" Analysis</h1>
+            <p class="subtitle">Understanding Why (none) Values Appear in Amplitude Charts</p>
+            
+            <div class="alert">
+                <h3>⚠️ Issue Summary</h3>
+                <p><strong>Problem:</strong> When querying data in Amplitude and creating a chart grouped by the user property "app users", the system cannot find the value for 18,124 users, so it displays <strong>(none)</strong>.</p>
+                <p style="margin-top: 12px;"><strong>Root Cause:</strong> The <code>user_properties</code> object is not being passed in the raw event data from Vacuum ETL pipeline and TV SDKs.</p>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="number">18,124</div>
+                    <div class="label">Total Affected Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">95.2%</div>
+                    <div class="label">Are Web Platform</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">4.8%</div>
+                    <div class="label">Are Smart TV Users</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Examples Grid -->
+        <div class="examples-grid">
+            <!-- Example 1: Broken -->
+            <div class="example-card broken">
+                <div class="example-header">
+                    <h2>❌ Request 1: BROKEN</h2>
+                    <div class="meta">Platform: Web (Desktop) | Shows: (none)</div>
+                </div>
+                <div class="example-body">
+                    <div class="info-row">
+                        <span class="label">Data Source</span>
+                        <span class="value">Vacuum ETL Pipeline</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">API Path</span>
+                        <span class="value">/batch</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Affected Users</span>
+                        <span class="value">~17,243 (95.2%)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Event Type</span>
+                        <span class="value">pay vod</span>
+                    </div>
+                    
+                    <div class="code-block">
+{
+  <span class="key">"device_id"</span>: <span class="string">"c9bd27d9f3c92..."</span>,
+  <span class="key">"user_id"</span>: <span class="string">"0e512403f61e..."</span>,
+  <span class="key">"platform"</span>: <span class="string">"web"</span>,
+  <span class="key">"event_type"</span>: <span class="string">"pay vod"</span>,
+  
+  <span class="notice">// ❌ NO user_properties OBJECT</span>
+  
+  <span class="key">"event_properties"</span>: {
+    <span class="key">"app name"</span>: <span class="string">"CANAL VOD"</span>,
+    <span class="key">"device category"</span>: <span class="string">"desktop"</span>,
+    <span class="key">"login status"</span>: <span class="string">"Logged-in"</span>
+  }
+}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Example 2: Broken -->
+            <div class="example-card broken">
+                <div class="example-header">
+                    <h2>❌ Request 2: BROKEN</h2>
+                    <div class="meta">Platform: Web (Desktop) | Shows: (none)</div>
+                </div>
+                <div class="example-body">
+                    <div class="info-row">
+                        <span class="label">Data Source</span>
+                        <span class="value">Vacuum ETL Pipeline</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">API Path</span>
+                        <span class="value">/batch</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Affected Users</span>
+                        <span class="value">~17,243 (95.2%)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Event Type</span>
+                        <span class="value">pay vod</span>
+                    </div>
+                    
+                    <div class="code-block">
+{
+  <span class="key">"device_id"</span>: <span class="string">"b76fc9ce307a..."</span>,
+  <span class="key">"user_id"</span>: <span class="string">"b177b5717f88..."</span>,
+  <span class="key">"platform"</span>: <span class="string">"web"</span>,
+  <span class="key">"event_type"</span>: <span class="string">"pay vod"</span>,
+  
+  <span class="notice">// ❌ NO user_properties OBJECT</span>
+  
+  <span class="key">"event_properties"</span>: {
+    <span class="key">"app name"</span>: <span class="string">"myCANAL"</span>,
+    <span class="key">"device category"</span>: <span class="string">"desktop"</span>,
+    <span class="key">"login status"</span>: <span class="string">"Logged-in"</span>
+  }
+}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Example 3: Working -->
+            <div class="example-card working">
+                <div class="example-header">
+                    <h2>✅ Request 3: WORKING</h2>
+                    <div class="meta">Platform: Canal+ STB | Shows: myCANAL</div>
+                </div>
+                <div class="example-body">
+                    <div class="info-row">
+                        <span class="label">Data Source</span>
+                        <span class="value">Direct SDK</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">API Path</span>
+                        <span class="value">/2/httpapi</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Affected Users</span>
+                        <span class="value">None - Working ✓</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Event Type</span>
+                        <span class="value">view page</span>
+                    </div>
+                    
+                    <div class="code-block">
+{
+  <span class="key">"device_id"</span>: <span class="string">"1737601568647-adb78..."</span>,
+  <span class="key">"app_version"</span>: <span class="string">"5.8.1-1-PROD"</span>,
+  <span class="key">"platform"</span>: <span class="string">"Canal+ STB"</span>,
+  <span class="key">"event_type"</span>: <span class="string">"view page"</span>,
+  
+  <span class="success">// ✅ user_properties EXISTS</span>
+  <span class="key">"user_properties"</span>: {
+    <span class="success key">"app users"</span>: <span class="string success">"myCANAL"</span>,
+    <span class="key">"login status"</span>: <span class="string">"Logged-in"</span>,
+    <span class="key">"subscriber status"</span>: <span class="string">"Subscriber"</span>,
+    <span class="key">"device category"</span>: <span class="string">"STB"</span>
+  },
+  
+  <span class="key">"event_properties"</span>: {
+    <span class="key">"app"</span>: <span class="string">"myCANAL"</span>,
+    <span class="key">"login status"</span>: <span class="string">"Logged-in"</span>
+  }
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison -->
+        <div class="comparison">
+            <h2>🎯 The Key Difference</h2>
+            <p style="text-align: center; color: #4a5568; font-size: 18px; margin-bottom: 30px;">
+                Amplitude requires user properties at the ROOT LEVEL of the event payload
+            </p>
+            
+            <div class="comparison-grid">
+                <div class="comparison-item broken">
+                    <h3>❌ Broken Structure</h3>
+                    <div class="code-block">
+{
+  "event_properties": {
+    "app name": "CANAL VOD"
+  }
+}
+
+<span class="notice">// ← Event property only</span>
+<span class="notice">// Amplitude cannot use this</span>
+<span class="notice">// for user-level grouping</span>
+                    </div>
+                </div>
+                
+                <div class="comparison-item working">
+                    <h3>✅ Working Structure</h3>
+                    <div class="code-block">
+{
+  "user_properties": {
+    "app users": "myCANAL"
+  }
+}
+
+<span class="success">// ← User property at root</span>
+<span class="success">// Amplitude can group by this</span>
+<span class="success">// Shows "myCANAL" in charts</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; padding: 24px; background: #edf2f7; border-radius: 12px;">
+                <h3 style="color: #2d3748; margin-bottom: 12px;">📊 How Amplitude Processes This</h3>
+                <p style="color: #4a5568; line-height: 1.8;">
+                    When you create a chart grouped by <strong>"app users"</strong> (a user property), Amplitude looks for the 
+                    <code style="background: #cbd5e0; padding: 2px 8px; border-radius: 4px;">user_properties</code> object in the raw event data.
+                    If this object doesn't exist or doesn't contain the <strong>"app users"</strong> key, Amplitude cannot find a value and displays 
+                    <strong style="color: #e53e3e;">(none)</strong> in your chart.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Solution -->
+        <div class="solution">
+            <h2>✅ How to Fix This</h2>
+            <p style="color: #2f855a; font-size: 16px;">Three approaches to resolve the (none) values:</p>
+            
+            <div class="solution-steps">
+                <div class="solution-step">
+                    <h3>
+                        <span class="badge priority-high">Priority 1</span>
+                        Fix Vacuum ETL Pipeline
+                    </h3>
+                    <p><strong>Impact:</strong> Fixes 17,243 users (95% of problem)</p>
+                    <p style="margin-top: 8px;">Update the Vacuum pipeline to map <code>event_properties["app name"]</code> → <code>user_properties["app users"]</code></p>
+                    <p style="margin-top: 8px; color: #2f855a;"><strong>Timeline:</strong> This week</p>
+                </div>
+                
+                <div class="solution-step">
+                    <h3>
+                        <span class="badge priority-medium">Priority 2</span>
+                        Update Smart TV SDKs
+                    </h3>
+                    <p><strong>Impact:</strong> Fixes 881 users (remaining 5%)</p>
+                    <p style="margin-top: 8px;">Configure Samsung TV, LG TV, Hisense TV, and Titan SDKs to include user_properties on initialization</p>
+                    <p style="margin-top: 8px; color: #c05621;"><strong>Timeline:</strong> Next sprint</p>
+                </div>
+                
+                <div class="solution-step">
+                    <h3>
+                        <span class="badge quick-win">Quick Win</span>
+                        Use Event Property Instead
+                    </h3>
+                    <p><strong>Impact:</strong> Immediate visibility for all platforms</p>
+                    <p style="margin-top: 8px;">Change your Amplitude chart to use event property <code>"app name"</code> instead of user property <code>"app users"</code></p>
+                    <p style="margin-top: 8px; color: #2f855a;"><strong>Timeline:</strong> 5 minutes - do this today!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
